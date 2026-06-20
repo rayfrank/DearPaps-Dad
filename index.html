@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Happy Father's Day 💌</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  overflow: hidden;
+  background: #000;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+}
+canvas { display: block; }
+
+/* ── Title ── */
+#title {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  text-align: center;
+  padding: 3vh 20px 0;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 2s ease 0.6s;
+}
+#title.show { opacity: 1; }
+#title h1 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(1.6rem, 4vw, 3.2rem);
+  font-weight: 400;
+  letter-spacing: 5px;
+  background: linear-gradient(110deg, #ffd060, #ffaa00, #ffe580, #ffcc33, #ffd060);
+  background-size: 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 5s linear infinite;
+  filter: drop-shadow(0 0 25px rgba(255,180,0,0.3));
+}
+@keyframes shimmer {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+#title p {
+  margin-top: 6px;
+  color: rgba(255,255,255,0.4);
+  font-size: clamp(0.7rem, 1.3vw, 0.9rem);
+  letter-spacing: 7px;
+  text-transform: uppercase;
+  font-weight: 300;
+  font-style: italic;
+}
+
+/* ── Star count hint ── */
+#star-hint {
+  position: fixed;
+  bottom: 4vh;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255,215,0,0.45);
+  font-size: 0.75rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  pointer-events: none;
+  z-index: 10;
+  animation: breathe 3s ease-in-out infinite;
+  white-space: nowrap;
+  display: none;
+}
+@keyframes breathe {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.9; }
+}
+
+/* ── Orb name tooltip ── */
+#tooltip {
+  position: fixed;
+  background: rgba(255,252,235,0.92);
+  border: 1px solid rgba(218,165,32,0.3);
+  border-radius: 20px;
+  padding: 5px 16px;
+  font-size: 0.88rem;
+  color: #5a3a00;
+  letter-spacing: 1px;
+  pointer-events: none;
+  transform: translate(-50%, -145%);
+  display: none;
+  z-index: 20;
+  backdrop-filter: blur(6px);
+}
+
+/* ══════════════════════════════════════════
+   CENTRAL LETTERBOX
+══════════════════════════════════════════ */
+#letterbox {
+  position: fixed;
+  top: 52%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(88vw, 390px);
+  max-height: 82vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 50;
+  border-radius: 20px;
+  box-shadow:
+    0 0 0 1px rgba(218,165,32,0.22),
+    0 30px 80px rgba(0,0,0,0.7),
+    0 0 80px rgba(255,180,0,0.07);
+  animation: boxFloat 6s ease-in-out infinite;
+  scrollbar-width: none;
+}
+#letterbox::-webkit-scrollbar { display: none; }
+
+@keyframes boxFloat {
+  0%, 100% { transform: translate(-50%, -50%) rotate(-0.3deg); }
+  50%       { transform: translate(-50%, calc(-50% - 7px)) rotate(0.3deg); }
+}
+
+/* Envelope flap header */
+.lb-flap {
+  background: linear-gradient(150deg, #c8940a 0%, #f7d860 50%, #c8940a 100%);
+  background-size: 200%;
+  animation: shimmer 5s linear infinite;
+  padding: 20px 24px 46px;
+  text-align: center;
+  position: relative;
+  /* V-cut at bottom mimicking envelope flap */
+  clip-path: polygon(0 0, 100% 0, 100% 65%, 50% 100%, 0 65%);
+}
+.lb-flap-icon {
+  font-size: 2.2rem;
+  display: block;
+  margin-bottom: 6px;
+  animation: iconWiggle 3s ease-in-out infinite;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+}
+@keyframes iconWiggle {
+  0%, 100% { transform: rotate(-6deg) translateY(0); }
+  50%       { transform: rotate(6deg) translateY(-4px); }
+}
+.lb-flap-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #3d2000;
+  letter-spacing: 1px;
+}
+.lb-flap-sub {
+  font-size: 0.7rem;
+  color: rgba(61,32,0,0.6);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+
+/* Paper body */
+.lb-body {
+  background: #fffef4;
+  padding: 22px 24px 24px;
+  border-radius: 0 0 20px 20px;
+}
+
+/* Success state */
+#lb-success {
+  display: none;
+  background: #fffef4;
+  padding: 48px 24px 52px;
+  text-align: center;
+  border-radius: 0 0 20px 20px;
+}
+.suc-icon { font-size: 3rem; display: block; margin-bottom: 14px; animation: iconWiggle 2s ease-in-out infinite; }
+.suc-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  color: #b8860b;
+  margin-bottom: 6px;
+}
+.suc-sub {
+  font-size: 0.75rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(100,60,0,0.45);
+}
+
+/* ── Form fields ── */
+.f-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 13px;
+}
+.f-group { margin-bottom: 13px; }
+.f-label {
+  display: block;
+  font-size: 0.68rem;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: rgba(90,50,0,0.55);
+  margin-bottom: 5px;
+}
+.f-input {
+  width: 100%;
+  background: rgba(255,255,255,0.75);
+  border: 1px solid rgba(218,165,32,0.3);
+  border-radius: 8px;
+  padding: 9px 12px;
+  color: #3d2000;
+  font-size: 0.98rem;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.f-input:focus {
+  border-color: rgba(218,165,32,0.55);
+  box-shadow: 0 0 0 3px rgba(218,165,32,0.1);
+}
+.f-input::placeholder { color: rgba(90,50,0,0.3); }
+.f-input.err { border-color: rgba(220,60,60,0.5); animation: shake 0.35s ease; }
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25%,75%  { transform: translateX(-5px); }
+  50%      { transform: translateX(5px); }
+}
+
+/* Lined-paper textarea */
+textarea.f-input {
+  resize: none;
+  height: 90px;
+  line-height: 26px;
+  padding-top: 6px;
+  background-image: repeating-linear-gradient(
+    transparent, transparent 25px,
+    rgba(218,165,32,0.18) 25px, rgba(218,165,32,0.18) 26px
+  );
+  background-attachment: local;
+}
+
+/* ── Emoji picker ── */
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+}
+.e-btn {
+  background: rgba(255,255,255,0.6);
+  border: 1px solid rgba(218,165,32,0.18);
+  border-radius: 6px;
+  padding: 5px 2px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  text-align: center;
+  line-height: 1;
+  transition: all 0.13s ease;
+}
+.e-btn:hover { background: rgba(255,220,100,0.35); transform: scale(1.15); }
+.e-btn.sel {
+  background: rgba(218,165,32,0.22);
+  border-color: rgba(218,165,32,0.6);
+  transform: scale(1.18);
+  box-shadow: 0 0 8px rgba(218,165,32,0.25);
+}
+
+/* ── Color swatches ── */
+.color-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.c-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.13s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+.c-swatch:hover { transform: scale(1.2); }
+.c-swatch.sel {
+  border-color: #fff;
+  transform: scale(1.22);
+  box-shadow: 0 0 10px rgba(255,255,255,0.4);
+}
+
+/* ── Send button ── */
+.lb-divider {
+  height: 1px;
+  background: rgba(218,165,32,0.18);
+  margin: 14px 0;
+}
+#send-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #9a6a00, #f0c030, #9a6a00);
+  background-size: 200%;
+  border: none;
+  color: #3d2000;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  padding: 13px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-position 0.35s, transform 0.15s, box-shadow 0.2s;
+}
+#send-btn:hover {
+  background-position: right;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(218,165,32,0.35);
+}
+#send-btn:active { transform: translateY(0); }
+
+/* ── Reset link ── */
+.reset-area {
+  text-align: center;
+  margin-top: 10px;
+}
+.reset-link {
+  font-size: 0.68rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(200,80,80,0.4);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  font-family: inherit;
+  transition: color 0.2s;
+}
+.reset-link:hover { color: rgba(200,80,80,0.7); }
+
+/* ══════════════════════════════════════════
+   READ CARD OVERLAY
+══════════════════════════════════════════ */
+#overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,10,0.75);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+#overlay.open { opacity: 1; pointer-events: all; }
+
+.r-card {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  border-radius: 24px;
+  padding: 48px 36px 42px;
+  text-align: center;
+  color: #fff;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.08);
+  transform: scale(0.75) translateY(28px);
+  opacity: 0;
+  transition: transform 0.5s cubic-bezier(0.34,1.56,0.64,1), opacity 0.35s ease;
+}
+#overlay.open .r-card { transform: scale(1) translateY(0); opacity: 1; }
+
+.r-card .r-emoji { font-size: 3.5rem; display: block; margin-bottom: 16px; animation: rFloat 2.5s ease-in-out infinite; }
+@keyframes rFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.r-card .r-from {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.55rem;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+.r-card .r-role { font-size: 0.72rem; letter-spacing: 4px; text-transform: uppercase; opacity: 0.6; margin-bottom: 20px; }
+.r-card .r-line { width: 44px; height: 1px; background: rgba(255,255,255,0.3); margin: 0 auto 20px; }
+.r-card .r-msg { font-size: 1.05rem; line-height: 1.9; font-style: italic; opacity: 0.93; }
+.r-close {
+  position: absolute;
+  top: 13px; right: 13px;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.25s;
+  line-height: 1;
+}
+.r-close:hover { background: rgba(255,255,255,0.22); transform: scale(1.1) rotate(90deg); }
+
+/* ══════════════════════════════════════════
+   VIEW NOTES BUTTON
+══════════════════════════════════════════ */
+#viewBtn {
+  position: fixed;
+  top: 3vh;
+  right: 20px;
+  background: linear-gradient(135deg, rgba(218,165,32,0.16), rgba(255,200,0,0.08));
+  border: 1px solid rgba(218,165,32,0.42);
+  color: rgba(255,215,0,0.92);
+  padding: 10px 18px;
+  border-radius: 30px;
+  font-size: 0.78rem;
+  letter-spacing: 2px;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  z-index: 15;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  transition: all 0.25s ease;
+  display: none;
+  white-space: nowrap;
+}
+#viewBtn:hover {
+  background: linear-gradient(135deg, rgba(218,165,32,0.28), rgba(255,200,0,0.18));
+  border-color: rgba(218,165,32,0.7);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(218,165,32,0.22);
+}
+
+/* ══════════════════════════════════════════
+   MESSAGES PANEL (Dad's view)
+══════════════════════════════════════════ */
+#msgPanel {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 4, 16, 0.94);
+  backdrop-filter: blur(18px);
+  z-index: 400;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+#msgPanel.open { opacity: 1; pointer-events: all; }
+
+.mp-head {
+  padding: 3.5vh 60px 12px;
+  text-align: center;
+  flex-shrink: 0;
+  position: relative;
+}
+.mp-head h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.4rem, 3.5vw, 2.2rem);
+  font-weight: 400;
+  letter-spacing: 4px;
+  background: linear-gradient(110deg, #ffd060, #ffaa00, #ffe580, #ffd060);
+  background-size: 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 5s linear infinite;
+}
+.mp-head p {
+  color: rgba(255,255,255,0.38);
+  font-size: 0.75rem;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-top: 6px;
+  font-style: italic;
+}
+.mp-close-btn {
+  position: absolute;
+  top: 3.5vh;
+  right: 20px;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.07);
+  color: rgba(255,255,255,0.7);
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.25s;
+  line-height: 1;
+}
+.mp-close-btn:hover { background: rgba(255,255,255,0.16); transform: scale(1.1) rotate(90deg); }
+
+.mp-divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(218,165,32,0.3), transparent);
+  margin: 0 30px 8px;
+  flex-shrink: 0;
+}
+
+.mp-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 20px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+}
+.mp-scroll::-webkit-scrollbar { width: 4px; }
+.mp-scroll::-webkit-scrollbar-track { background: transparent; }
+.mp-scroll::-webkit-scrollbar-thumb { background: rgba(218,165,32,0.2); border-radius: 2px; }
+
+.mi-card {
+  border-radius: 20px;
+  padding: 28px 26px 24px;
+  text-align: center;
+  color: #fff;
+  box-shadow: 0 10px 35px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06);
+  opacity: 0;
+  transform: translateY(18px);
+  animation: cardSlideIn 0.45s ease forwards;
+}
+@keyframes cardSlideIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+.mi-emoji { font-size: 2.4rem; display: block; margin-bottom: 10px; }
+.mi-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+.mi-role { font-size: 0.68rem; letter-spacing: 4px; text-transform: uppercase; opacity: 0.6; margin-bottom: 14px; }
+.mi-line { width: 40px; height: 1px; background: rgba(255,255,255,0.28); margin: 0 auto 14px; }
+.mi-msg { font-style: italic; line-height: 1.85; font-size: 1rem; opacity: 0.92; }
+
+/* Empty state */
+.mp-empty {
+  text-align: center;
+  color: rgba(255,255,255,0.3);
+  padding: 60px 20px;
+  font-style: italic;
+  font-size: 1.1rem;
+}
+</style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<div id="title">
+  <h1>Happy Father's Day</h1>
+  <p>With love, from all of us</p>
+</div>
+
+<!-- ═══════════════════════════════
+     CENTRAL LETTERBOX
+═══════════════════════════════ -->
+<div id="letterbox">
+
+  <!-- Envelope flap header -->
+  <div class="lb-flap">
+    <span class="lb-flap-icon">💌</span>
+    <div class="lb-flap-title">Leave Dad a Note</div>
+    <div class="lb-flap-sub">Your note becomes a glowing star</div>
+  </div>
+
+  <!-- Success screen -->
+  <div id="lb-success">
+    <span class="suc-icon">⭐</span>
+    <div class="suc-title">Note sent to Dad's sky!</div>
+    <div class="suc-sub">Next person's turn in a moment…</div>
+  </div>
+
+  <!-- Write form -->
+  <div class="lb-body" id="lb-form">
+    <form id="noteForm" novalidate>
+
+      <div class="f-row">
+        <div>
+          <label class="f-label" for="n-name">Your Name</label>
+          <input class="f-input" id="n-name" type="text" placeholder="e.g. Emma" autocomplete="off">
+        </div>
+        <div>
+          <label class="f-label" for="n-role">You are his…</label>
+          <input class="f-input" id="n-role" type="text" placeholder="Daughter, Son…" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="f-group">
+        <label class="f-label">Pick an emoji</label>
+        <div class="emoji-grid" id="emojiGrid"></div>
+      </div>
+
+      <div class="f-group">
+        <label class="f-label">Star color</label>
+        <div class="color-row" id="colorRow"></div>
+      </div>
+
+      <div class="lb-divider"></div>
+
+      <div class="f-group">
+        <label class="f-label" for="n-msg">Your note to Dad</label>
+        <textarea class="f-input" id="n-msg" placeholder="Write something from the heart…"></textarea>
+      </div>
+
+      <button type="submit" id="send-btn">Place Your Star ✦</button>
+
+    </form>
+    <div class="reset-area" id="resetArea"></div>
+  </div>
+
+</div>
+
+<div id="star-hint"></div>
+<div id="tooltip"></div>
+
+<!-- ── Read message card ── -->
+<div id="overlay">
+  <div class="r-card" id="rCard">
+    <button class="r-close" id="rClose">✕</button>
+    <span class="r-emoji" id="rEmoji"></span>
+    <div class="r-from"   id="rFrom"></div>
+    <div class="r-role"   id="rRole"></div>
+    <div class="r-line"></div>
+    <div class="r-msg"    id="rMsg"></div>
+  </div>
+</div>
+
+<!-- View Notes button -->
+<button id="viewBtn">💌 View Notes for Dad</button>
+
+<!-- Full-screen messages panel -->
+<div id="msgPanel">
+  <div class="mp-head">
+    <h2>Notes for Dad 💛</h2>
+    <p id="mpSub"></p>
+    <button class="mp-close-btn" id="mpClose">✕</button>
+  </div>
+  <div class="mp-divider"></div>
+  <div class="mp-scroll" id="mpScroll"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ══════════════════════════════════════════════
+   OPTIONS
+══════════════════════════════════════════════ */
+const EMOJIS = [
+  '💕','❤️','😊','🙏','⚽','🏆','🌟','✨',
+  '🌸','🦋','🎉','🎁','😎','☕','🎸','😄'
+];
+const PALETTE = [
+  '#ff6b9d','#38bdf8','#c084fc','#fbbf24',
+  '#f87171','#34d399','#fb923c','#2dd4bf'
+];
+
+function autoCard(hex) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `linear-gradient(145deg,rgb(${r*.48|0},${g*.48|0},${b*.48|0}),rgb(${r*.2|0},${g*.2|0},${b*.2|0}))`;
+}
+
+/* ══════════════════════════════════════════════
+   LOCAL STORAGE
+══════════════════════════════════════════════ */
+const STORE = 'fathersday_v2';
+function getSaved() { try { return JSON.parse(localStorage.getItem(STORE) || '[]'); } catch { return []; } }
+function pushSaved(obj) { const a = getSaved(); a.push(obj); localStorage.setItem(STORE, JSON.stringify(a)); }
+function clearSaved() { localStorage.removeItem(STORE); }
+
+/* ══════════════════════════════════════════════
+   THREE.JS SETUP
+══════════════════════════════════════════════ */
+const canvas = document.getElementById('canvas');
+const W = () => window.innerWidth, H = () => window.innerHeight;
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(W(), H());
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x020410);
+
+const camera = new THREE.PerspectiveCamera(55, W() / H(), 0.1, 300);
+camera.position.z = 13;
+
+scene.add(new THREE.AmbientLight(0x0a1233, 4));
+const sun = new THREE.PointLight(0x6699ff, 2, 50);
+sun.position.set(0, 8, 8);
+scene.add(sun);
+
+/* ── Stars ── */
+function starTex() {
+  const c = document.createElement('canvas'); c.width = c.height = 32;
+  const x = c.getContext('2d');
+  const g = x.createRadialGradient(16,16,0, 16,16,16);
+  g.addColorStop(0,'rgba(255,255,255,1)');
+  g.addColorStop(.25,'rgba(210,225,255,.85)');
+  g.addColorStop(.6,'rgba(140,170,255,.25)');
+  g.addColorStop(1,'rgba(0,0,0,0)');
+  x.fillStyle = g; x.fillRect(0,0,32,32);
+  return new THREE.CanvasTexture(c);
+}
+const sp = new Float32Array(10000 * 3);
+for (let i = 0; i < 10000; i++) {
+  const th = Math.random()*Math.PI*2, ph = Math.acos(2*Math.random()-1), r = 65+Math.random()*130;
+  sp[i*3]=r*Math.sin(ph)*Math.cos(th); sp[i*3+1]=r*Math.sin(ph)*Math.sin(th); sp[i*3+2]=r*Math.cos(ph);
+}
+const starGeo = new THREE.BufferGeometry();
+starGeo.setAttribute('position', new THREE.BufferAttribute(sp, 3));
+const starField = new THREE.Points(starGeo, new THREE.PointsMaterial({
+  map: starTex(), size: 0.22, sizeAttenuation: true,
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.9
+}));
+scene.add(starField);
+
+/* ── Nebula clouds ── */
+function nebTex(r,g,b) {
+  const c=document.createElement('canvas'); c.width=c.height=256;
+  const x=c.getContext('2d');
+  const gr=x.createRadialGradient(128,128,0,128,128,128);
+  gr.addColorStop(0,`rgba(${r},${g},${b},.18)`); gr.addColorStop(.5,`rgba(${r},${g},${b},.06)`); gr.addColorStop(1,`rgba(${r},${g},${b},0)`);
+  x.fillStyle=gr; x.fillRect(0,0,256,256);
+  return new THREE.CanvasTexture(c);
+}
+[{p:[-8,4,-20],s:28,c:[80,40,180]},{p:[10,-5,-25],s:24,c:[180,30,80]},{p:[0,-8,-18],s:20,c:[40,100,180]}]
+.forEach(({p,s,c}) => {
+  const sp2=new THREE.Sprite(new THREE.SpriteMaterial({map:nebTex(...c),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));
+  sp2.position.set(...p); sp2.scale.setScalar(s); scene.add(sp2);
+});
+
+/* ── Glow texture ── */
+function glowTex(hex) {
+  const R=parseInt(hex.slice(1,3),16),G=parseInt(hex.slice(3,5),16),B=parseInt(hex.slice(5,7),16);
+  const c=document.createElement('canvas'); c.width=c.height=128;
+  const x=c.getContext('2d');
+  const g=x.createRadialGradient(64,64,0,64,64,64);
+  g.addColorStop(0,`rgba(${R},${G},${B},1)`); g.addColorStop(.2,`rgba(${R},${G},${B},.85)`);
+  g.addColorStop(.55,`rgba(${R},${G},${B},.28)`); g.addColorStop(.85,`rgba(${R},${G},${B},.05)`); g.addColorStop(1,`rgba(${R},${G},${B},0)`);
+  x.fillStyle=g; x.fillRect(0,0,128,128);
+  return new THREE.CanvasTexture(c);
+}
+
+/* ══════════════════════════════════════════════
+   ORB SYSTEM
+   Uses the golden angle so each new orb gets
+   a unique non-overlapping position automatically.
+══════════════════════════════════════════════ */
+const orbs    = [];
+const spheres = [];
+const messages = getSaved();
+
+function orbPos(idx) {
+  // Golden angle spiral — each orb naturally avoids the others
+  const angle = idx * 137.508 * (Math.PI / 180);
+  const r     = 6.0 + (idx % 4) * 0.45;       // radius 6–7.35
+  return {
+    x: Math.cos(angle) * r * 1.35,
+    y: Math.sin(angle) * r * 0.78,
+    z: Math.sin(idx * 2.3) * 0.9
+  };
+}
+
+function buildOrb(msg, idx) {
+  const { x:bx, y:by, z:bz } = orbPos(idx);
+  const grp = new THREE.Group();
+  grp.position.set(bx, by, bz);
+  const col = new THREE.Color(msg.color);
+
+  const sphere = new THREE.Mesh(
+    new THREE.SphereGeometry(0.5, 40, 40),
+    new THREE.MeshStandardMaterial({ color:col, emissive:col, emissiveIntensity:.85, roughness:.2, metalness:.55 })
+  );
+  grp.add(sphere);
+
+  const glw = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: glowTex(msg.color), blending:THREE.AdditiveBlending, transparent:true, depthWrite:false, opacity:.8
+  }));
+  glw.scale.setScalar(4.5);
+  grp.add(glw);
+
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(.75, .016, 10, 72),
+    new THREE.MeshBasicMaterial({ color:col, transparent:true, opacity:.5 })
+  );
+  ring.rotation.x = Math.PI / 2;
+  grp.add(ring);
+
+  const ring2 = new THREE.Mesh(
+    new THREE.TorusGeometry(.95, .009, 8, 72),
+    new THREE.MeshBasicMaterial({ color:col, transparent:true, opacity:.22 })
+  );
+  ring2.rotation.x = Math.PI / 3;
+  ring2.rotation.z = Math.PI / 5;
+  grp.add(ring2);
+
+  grp.userData = { idx, bx, by, bz, phase: idx * 137.508 * Math.PI / 180, sphere, glw, ring, ring2, delay: idx * 0.35 + 0.8 };
+  grp.scale.setScalar(0);
+  scene.add(grp);
+  orbs.push(grp);
+  spheres.push(sphere);
+}
+
+// Build orbs for all existing saved messages
+messages.forEach((m, i) => buildOrb(m, i));
+
+// Update star hint
+function updateHint() {
+  const hint = document.getElementById('star-hint');
+  const n = messages.length;
+  if (n === 0) { hint.style.display = 'none'; return; }
+  hint.style.display = 'block';
+  hint.textContent = n === 1
+    ? '✦ 1 star left for Dad — click to read it ✦'
+    : `✦ ${n} stars left for Dad — click any to read ✦`;
+}
+updateHint();
+
+/* ── Burst particles ── */
+const BN = 90;
+const bGeo = new THREE.BufferGeometry();
+const bPos = new Float32Array(BN * 3);
+bGeo.setAttribute('position', new THREE.BufferAttribute(bPos, 3));
+const bMat = new THREE.PointsMaterial({ size:.07, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false });
+const burstPts = new THREE.Points(bGeo, bMat);
+burstPts.visible = false;
+scene.add(burstPts);
+let bVels=[], bT=0, bActive=false;
+
+function burst(pos, hex) {
+  bMat.color = new THREE.Color(hex); bMat.opacity = 1;
+  const attr = bGeo.attributes.position;
+  bVels = [];
+  for (let i=0;i<BN;i++) {
+    attr.setXYZ(i,pos.x,pos.y,pos.z);
+    const t=Math.random()*Math.PI*2, p=Math.random()*Math.PI, s=.05+Math.random()*.12;
+    bVels.push(Math.sin(p)*Math.cos(t)*s, Math.sin(p)*Math.sin(t)*s, Math.cos(p)*s*.35);
+  }
+  attr.needsUpdate=true; burstPts.visible=true; bActive=true; bT=0;
+}
+
+/* ══════════════════════════════════════════════
+   INTERACTION
+══════════════════════════════════════════════ */
+const ray     = new THREE.Raycaster();
+const mouse   = new THREE.Vector2(-9,-9);
+const tooltip = document.getElementById('tooltip');
+let hovIdx = -1;
+
+function setMouse(x,y) {
+  mouse.set((x/W())*2-1, -(y/H())*2+1);
+  tooltip.style.left = x+'px';
+  tooltip.style.top  = y+'px';
+}
+function handleClick(x,y) {
+  setMouse(x,y);
+  ray.setFromCamera(mouse,camera);
+  const hits = ray.intersectObjects(spheres);
+  if (hits.length) { const i=spheres.indexOf(hits[0].object); if(i>=0) openCard(i); }
+}
+window.addEventListener('mousemove', e => setMouse(e.clientX,e.clientY));
+window.addEventListener('click',     e => handleClick(e.clientX,e.clientY));
+window.addEventListener('touchend',  e => { const t=e.changedTouches[0]; handleClick(t.clientX,t.clientY); },{passive:true});
+
+/* ── Read card ── */
+const overlay = document.getElementById('overlay');
+function openCard(idx) {
+  const m = messages[idx];
+  document.getElementById('rEmoji').textContent = m.emoji;
+  document.getElementById('rFrom').textContent  = `From ${m.name}`;
+  document.getElementById('rRole').textContent  = m.role;
+  document.getElementById('rMsg').textContent   = `"${m.message}"`;
+  document.getElementById('rCard').style.background = m.card;
+  overlay.classList.add('open');
+  burst(orbs[idx].position, m.color);
+}
+function closeCard() { overlay.classList.remove('open'); }
+document.getElementById('rClose').addEventListener('click', closeCard);
+overlay.addEventListener('click', e => { if(e.target===overlay) closeCard(); });
+
+/* ── Resize ── */
+window.addEventListener('resize', () => {
+  camera.aspect = W()/H(); camera.updateProjectionMatrix(); renderer.setSize(W(),H());
+});
+
+/* ── Show title ── */
+setTimeout(() => document.getElementById('title').classList.add('show'), 500);
+
+/* ══════════════════════════════════════════════
+   ANIMATION LOOP
+══════════════════════════════════════════════ */
+const clock = new THREE.Clock();
+(function tick() {
+  requestAnimationFrame(tick);
+  const t = clock.getElapsedTime();
+
+  starField.rotation.y = t * .01;
+  starField.rotation.x = t * .004;
+
+  // Spawn orbs one by one
+  orbs.forEach(g => {
+    if (t > g.userData.delay) {
+      const s = Math.min(1, g.scale.x + .05);
+      g.scale.setScalar(s);
+    }
+  });
+
+  // Hover
+  ray.setFromCamera(mouse,camera);
+  const hits   = ray.intersectObjects(spheres);
+  const newHov = hits.length ? spheres.indexOf(hits[0].object) : -1;
+  if (newHov !== hovIdx) {
+    if (hovIdx>=0) { orbs[hovIdx].userData.sphere.material.emissiveIntensity=.85; orbs[hovIdx].userData.glw.scale.setScalar(4.5); }
+    hovIdx = newHov;
+    if (hovIdx>=0) {
+      canvas.style.cursor='pointer';
+      tooltip.textContent = messages[hovIdx].name;
+      tooltip.style.color = messages[hovIdx].color;
+      tooltip.style.borderColor = messages[hovIdx].color+'44';
+      tooltip.style.display='block';
+    } else { canvas.style.cursor='default'; tooltip.style.display='none'; }
+  }
+
+  // Animate orbs
+  orbs.forEach((g,i) => {
+    const {bx,by,bz,phase,sphere,glw,ring,ring2} = g.userData;
+    g.position.set(bx+Math.sin(t*.35+phase)*.13, by+Math.cos(t*.45+phase)*.17, bz+Math.sin(t*.25+phase)*.09);
+    g.rotation.y = t*.4+phase;
+    const h = i===hovIdx;
+    sphere.material.emissiveIntensity = h ? 1.7+Math.sin(t*5)*.2 : .85+Math.sin(t*1.8+phase)*.12;
+    glw.scale.setScalar(h ? 6.5 : 4.5+Math.sin(t*1.5+phase)*.6);
+    ring.rotation.z  = t*.6+phase;
+    ring2.rotation.y = t*.35+phase;
+  });
+
+  // Burst
+  if (bActive) {
+    bT += .025;
+    const attr = bGeo.attributes.position;
+    for (let i=0;i<BN;i++) {
+      attr.setX(i,attr.getX(i)+bVels[i*3]*(1.2-bT));
+      attr.setY(i,attr.getY(i)+bVels[i*3+1]*(1.2-bT));
+      attr.setZ(i,attr.getZ(i)+bVels[i*3+2]*(1.2-bT));
+    }
+    attr.needsUpdate=true;
+    bMat.opacity = Math.max(0,1-bT*1.2);
+    if (bT>=1) { burstPts.visible=false; bActive=false; }
+  }
+
+  camera.position.x = Math.sin(t*.07)*.55;
+  camera.position.y = Math.cos(t*.05)*.35;
+  camera.lookAt(0,0,0);
+  renderer.render(scene,camera);
+})();
+
+/* ══════════════════════════════════════════════
+   LETTERBOX FORM
+══════════════════════════════════════════════ */
+
+/* Build emoji grid */
+let selEmoji = '✨';
+const emojiGrid = document.getElementById('emojiGrid');
+EMOJIS.forEach(e => {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'e-btn' + (e===selEmoji?' sel':'');
+  btn.textContent = e;
+  btn.addEventListener('click', () => {
+    emojiGrid.querySelectorAll('.e-btn').forEach(b => b.classList.remove('sel'));
+    btn.classList.add('sel');
+    selEmoji = e;
+  });
+  emojiGrid.appendChild(btn);
+});
+
+/* Build color swatches */
+let selColor = PALETTE[3]; // gold default
+const colorRow = document.getElementById('colorRow');
+PALETTE.forEach(hex => {
+  const sw = document.createElement('div');
+  sw.className = 'c-swatch' + (hex===selColor?' sel':'');
+  sw.style.background = hex;
+  sw.addEventListener('click', () => {
+    colorRow.querySelectorAll('.c-swatch').forEach(s => s.classList.remove('sel'));
+    sw.classList.add('sel');
+    selColor = hex;
+  });
+  colorRow.appendChild(sw);
+});
+
+/* Reset link (only show if there are saved messages) */
+const resetArea = document.getElementById('resetArea');
+if (messages.length > 0) {
+  const btn = document.createElement('button');
+  btn.className = 'reset-link';
+  btn.textContent = `Clear all ${messages.length} saved note${messages.length>1?'s':''} and reset`;
+  btn.addEventListener('click', () => {
+    if (confirm('Remove all saved notes? This cannot be undone.')) { clearSaved(); location.reload(); }
+  });
+  resetArea.appendChild(btn);
+}
+
+/* Form submit */
+document.getElementById('noteForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const nameEl = document.getElementById('n-name');
+  const msgEl  = document.getElementById('n-msg');
+  const name   = nameEl.value.trim();
+  const role   = document.getElementById('n-role').value.trim();
+  const msg    = msgEl.value.trim();
+
+  let ok = true;
+  [!name && nameEl, !msg && msgEl].forEach(el => {
+    if (!el) return;
+    el.classList.add('err');
+    el.addEventListener('animationend', () => el.classList.remove('err'), {once:true});
+    if (ok) { el.focus(); ok=false; }
+  });
+  if (!ok) return;
+
+  const entry = {
+    name,
+    role: role || 'Family',
+    emoji: selEmoji,
+    message: msg,
+    color: selColor,
+    card: autoCard(selColor)
+  };
+
+  // Save to storage
+  pushSaved(entry);
+  messages.push(entry);
+
+  // Add orb to the 3D scene immediately (no reload needed)
+  buildOrb(entry, orbs.length);
+  updateHint();
+  refreshViewBtn();
+  if (resetArea.children.length === 0) {
+    const rb = document.createElement('button');
+    rb.className = 'reset-link';
+    rb.textContent = `Clear all ${messages.length} saved note${messages.length>1?'s':''}`;
+    rb.addEventListener('click', () => { if(confirm('Remove all saved notes?')) { clearSaved(); location.reload(); } });
+    resetArea.appendChild(rb);
+  } else {
+    resetArea.querySelector('.reset-link').textContent = `Clear all ${messages.length} saved note${messages.length>1?'s':''}`;
+  }
+
+  // Show success, then reset form
+  document.getElementById('lb-form').style.display = 'none';
+  document.getElementById('lb-success').style.display = 'block';
+
+  setTimeout(() => {
+    document.getElementById('lb-success').style.display = 'none';
+    document.getElementById('lb-form').style.display = 'block';
+    nameEl.value = '';
+    document.getElementById('n-role').value = '';
+    msgEl.value = '';
+    // Reset emoji to default
+    emojiGrid.querySelectorAll('.e-btn').forEach(b => {
+      b.classList.toggle('sel', b.textContent === '✨');
+    });
+    selEmoji = '✨';
+  }, 2200);
+});
+
+/* ══════════════════════════════════════════════
+   VIEW NOTES PANEL
+══════════════════════════════════════════════ */
+const viewBtn  = document.getElementById('viewBtn');
+const msgPanel = document.getElementById('msgPanel');
+
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function refreshViewBtn() {
+  const n = messages.length;
+  if (n > 0) {
+    viewBtn.style.display = 'block';
+    viewBtn.textContent = `💌 View ${n} Note${n > 1 ? 's' : ''} for Dad`;
+  } else {
+    viewBtn.style.display = 'none';
+  }
+}
+refreshViewBtn();
+
+function populatePanel() {
+  const scroll = document.getElementById('mpScroll');
+  const sub    = document.getElementById('mpSub');
+  scroll.innerHTML = '';
+
+  if (messages.length === 0) {
+    sub.textContent = '';
+    scroll.innerHTML = '<div class="mp-empty">No notes yet — be the first to leave one 💌</div>';
+    return;
+  }
+
+  sub.textContent = messages.length === 1
+    ? '1 note from someone who loves you'
+    : `${messages.length} notes from the ones who love you`;
+
+  messages.forEach((m, i) => {
+    const card = document.createElement('div');
+    card.className = 'mi-card';
+    card.style.background = m.card;
+    card.style.animationDelay = `${i * 0.1}s`;
+    card.innerHTML = `
+      <span class="mi-emoji">${escHtml(m.emoji)}</span>
+      <div class="mi-name">From ${escHtml(m.name)}</div>
+      <div class="mi-role">${escHtml(m.role)}</div>
+      <div class="mi-line"></div>
+      <div class="mi-msg">&ldquo;${escHtml(m.message)}&rdquo;</div>
+    `;
+    scroll.appendChild(card);
+  });
+}
+
+viewBtn.addEventListener('click', () => {
+  populatePanel();
+  msgPanel.classList.add('open');
+});
+
+document.getElementById('mpClose').addEventListener('click', () => {
+  msgPanel.classList.remove('open');
+});
+
+msgPanel.addEventListener('click', e => {
+  if (e.target === msgPanel) msgPanel.classList.remove('open');
+});
+</script>
+</body>
+</html>
