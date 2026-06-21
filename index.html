@@ -318,6 +318,12 @@ textarea.f-input {
   box-shadow: 0 8px 24px rgba(218,165,32,0.35);
 }
 #send-btn:active { transform: translateY(0); }
+#send-btn:disabled {
+  cursor: wait;
+  opacity: 0.72;
+  transform: none;
+  box-shadow: none;
+}
 
 /* ── Reset link ── */
 .reset-area {
@@ -599,8 +605,42 @@ textarea.f-input {
   letter-spacing: 4px;
   text-transform: uppercase;
   color: rgba(255,215,0,0.35);
+}
+
+.strip-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 8px;
   padding-left: 2px;
+}
+
+.sync-status {
+  margin-top: 3px;
+  color: rgba(255,255,255,0.36);
+  font-size: 0.68rem;
+  font-style: italic;
+}
+.sync-status[data-state="live"] { color: rgba(94,234,212,0.68); }
+.sync-status[data-state="warn"] { color: rgba(251,191,36,0.78); }
+
+.strip-refresh {
+  width: 34px;
+  height: 30px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  border: 1px solid rgba(218,165,32,0.28);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,215,0,0.72);
+  cursor: pointer;
+  font-size: 0.95rem;
+  line-height: 1;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+.strip-refresh:hover {
+  transform: translateY(-2px);
+  background: rgba(255,255,255,0.12);
 }
 
 #stripRow {
@@ -701,9 +741,17 @@ textarea.f-input {
     background: linear-gradient(to top, rgba(2,4,16,0.99) 84%, rgba(2,4,16,0));
   }
   .strip-label {
-    margin-bottom: 7px;
-    padding-left: 2px;
     letter-spacing: 3px;
+  }
+  .strip-head {
+    margin-bottom: 7px;
+  }
+  .sync-status {
+    font-size: 0.64rem;
+  }
+  .strip-refresh {
+    width: 32px;
+    height: 28px;
   }
   #stripRow {
     display: grid;
@@ -845,7 +893,13 @@ textarea.f-input {
 
 <!-- Notes strip — shown as notes are written -->
 <div id="notesStrip">
-  <div class="strip-label" id="stripLabel">Notes for Dad</div>
+  <div class="strip-head">
+    <div>
+      <div class="strip-label" id="stripLabel">Notes for Dad</div>
+      <div class="sync-status" id="syncStatus">Saved on this device</div>
+    </div>
+    <button class="strip-refresh" id="refreshNotes" type="button" aria-label="Refresh notes">↻</button>
+  </div>
   <div id="stripRow"></div>
 </div>
 
@@ -864,6 +918,7 @@ textarea.f-input {
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="database-config.js"></script>
 <script>
 /* ══════════════════════════════════════════════
    OPTIONS
@@ -885,12 +940,151 @@ function autoCard(hex) {
 }
 
 /* ══════════════════════════════════════════════
-   LOCAL STORAGE
+   SHARED DATABASE + LOCAL FALLBACK
 ══════════════════════════════════════════════ */
 const STORE = 'fathersday_v2';
-function getSaved() { try { return JSON.parse(localStorage.getItem(STORE) || '[]'); } catch { return []; } }
-function pushSaved(obj) { const a = getSaved(); a.push(obj); localStorage.setItem(STORE, JSON.stringify(a)); }
-function clearSaved() { localStorage.removeItem(STORE); }
+const DB = {
+  supabaseUrl: '',
+  supabaseAnonKey: '',
+  table: 'fathers_day_notes',
+  ...(window.DAD_NOTES_DB || {})
+};
+DB.supabaseUrl = String(DB.supabaseUrl || '').replace(/\/+$/, '');
+const syncStatus = document.getElementById('syncStatus');
+
+function isDbConfigured() {
+  return /^https:\/\/.+\.supabase\.co$/i.test(DB.supabaseUrl)
+    && typeof DB.supabaseAnonKey === 'string'
+    && DB.supabaseAnonKey.length > 40
+    && !DB.supabaseAnonKey.includes('YOUR_');
+}
+
+function setSyncStatus(text, state = '') {
+  syncStatus.textContent = text;
+  syncStatus.dataset.state = state;
+}
+
+function makeId() {
+  if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
+  return `local-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function getLocalSaved() {
+  try { return JSON.parse(localStorage.getItem(STORE) || '[]').map(normalizeNote); }
+  catch { return []; }
+}
+
+function setLocalSaved(notes) {
+  try { localStorage.setItem(STORE, JSON.stringify(notes.map(normalizeNote))); }
+  catch { /* Private browsing can block localStorage. */ }
+}
+
+function pushLocalSaved(obj) {
+  const next = getLocalSaved();
+  next.push(normalizeNote(obj));
+  setLocalSaved(next);
+}
+
+function clearLocalSaved() {
+  try { localStorage.removeItem(STORE); }
+  catch { /* Private browsing can block localStorage. */ }
+}
+
+function normalizeNote(note) {
+  const color = note.color || PALETTE[3];
+  return {
+    id: note.id || makeId(),
+    name: String(note.name || '').trim() || 'Someone',
+    role: String(note.role || '').trim() || 'Family',
+    emoji: String(note.emoji || '✨'),
+    message: String(note.message || '').trim(),
+    color,
+    card: note.card || autoCard(color),
+    created_at: note.created_at || new Date().toISOString()
+  };
+}
+
+function dbHeaders(extra = {}) {
+  return {
+    apikey: DB.supabaseAnonKey,
+    Authorization: `Bearer ${DB.supabaseAnonKey}`,
+    ...extra
+  };
+}
+
+function dbRow(note) {
+  const n = normalizeNote(note);
+  return {
+    name: n.name,
+    role: n.role,
+    emoji: n.emoji,
+    message: n.message,
+    color: n.color,
+    card: n.card
+  };
+}
+
+async function fetchSharedNotes() {
+  const fields = 'id,name,role,emoji,message,color,card,created_at';
+  const url = `${DB.supabaseUrl}/rest/v1/${DB.table}?select=${fields}&order=created_at.asc`;
+  const res = await fetch(url, { headers: dbHeaders() });
+  if (!res.ok) throw new Error(`Could not load shared notes (${res.status})`);
+  return (await res.json()).map(normalizeNote);
+}
+
+async function insertSharedNote(note) {
+  const res = await fetch(`${DB.supabaseUrl}/rest/v1/${DB.table}`, {
+    method: 'POST',
+    headers: dbHeaders({
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation'
+    }),
+    body: JSON.stringify(dbRow(note))
+  });
+  if (!res.ok) throw new Error(`Could not save shared note (${res.status})`);
+  const rows = await res.json();
+  return normalizeNote(rows[0] || note);
+}
+
+async function saveNote(note) {
+  const normalized = normalizeNote(note);
+  if (!isDbConfigured()) {
+    pushLocalSaved(normalized);
+    setSyncStatus('Saved on this device', 'warn');
+    return normalized;
+  }
+
+  try {
+    const saved = await insertSharedNote(normalized);
+    setSyncStatus('Shared across devices', 'live');
+    return saved;
+  } catch (err) {
+    console.warn(err);
+    pushLocalSaved(normalized);
+    setSyncStatus('Saved here; sync will need a refresh', 'warn');
+    return normalized;
+  }
+}
+
+async function loadSavedNotes({ silent = false } = {}) {
+  if (!isDbConfigured()) {
+    renderMessages(getLocalSaved());
+    setSyncStatus('Saved on this device', 'warn');
+    return;
+  }
+
+  if (!silent) setSyncStatus('Loading shared notes...', '');
+  try {
+    const sharedNotes = await fetchSharedNotes();
+    setLocalSaved(sharedNotes);
+    renderMessages(sharedNotes);
+    setSyncStatus('Shared across devices', 'live');
+  } catch (err) {
+    console.warn(err);
+    renderMessages(getLocalSaved());
+    setSyncStatus('Using this device cache', 'warn');
+  }
+}
 
 /* ══════════════════════════════════════════════
    THREE.JS SETUP
@@ -974,10 +1168,11 @@ function glowTex(hex) {
 ══════════════════════════════════════════════ */
 const orbs    = [];
 const spheres = [];
-const messages = getSaved();
+const messages = [];
 const notesStrip = document.getElementById('notesStrip');
 const stripRow = document.getElementById('stripRow');
 const stripLabel = document.getElementById('stripLabel');
+const refreshNotesBtn = document.getElementById('refreshNotes');
 
 function orbPos(idx) {
   // Golden angle spiral — each orb naturally avoids the others
@@ -1030,9 +1225,6 @@ function buildOrb(msg, idx) {
   spheres.push(sphere);
 }
 
-// Build orbs and strip cards for all existing saved messages
-messages.forEach((m, i) => { buildOrb(m, i); addToStrip(m, i); });
-
 // Update star hint
 function updateHint() { updateStripState(); }
 
@@ -1043,7 +1235,43 @@ function updateStripState() {
   stripLabel.textContent = n === 1 ? '1 Note for Dad' : `${n} Notes for Dad`;
 }
 
-function addToStrip(msg, idx) {
+function clearRenderedNotes() {
+  orbs.forEach(g => scene.remove(g));
+  orbs.length = 0;
+  spheres.length = 0;
+  stripRow.innerHTML = '';
+}
+
+function renderMessages(nextMessages, { scrollLatest = false } = {}) {
+  clearRenderedNotes();
+  messages.splice(0, messages.length, ...nextMessages.map(normalizeNote));
+  messages.forEach((m, i) => {
+    buildOrb(m, i);
+    addToStrip(m, i, false);
+  });
+  updateHint();
+  refreshViewBtn();
+  refreshResetButton();
+  if (msgPanel.classList.contains('open')) populatePanel();
+  if (scrollLatest && stripRow.lastElementChild) {
+    setTimeout(() => stripRow.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'end' }), 100);
+  }
+}
+
+function appendMessage(note, { scrollLatest = true } = {}) {
+  const normalized = normalizeNote(note);
+  if (messages.some(m => m.id === normalized.id)) return;
+  const idx = messages.length;
+  messages.push(normalized);
+  buildOrb(normalized, idx);
+  addToStrip(normalized, idx, scrollLatest);
+  updateHint();
+  refreshViewBtn();
+  refreshResetButton();
+  if (msgPanel.classList.contains('open')) populatePanel();
+}
+
+function addToStrip(msg, idx, scrollLatest = false) {
   const card = document.createElement('div');
   card.className = 's-card';
   card.tabIndex = 0;
@@ -1062,9 +1290,8 @@ function addToStrip(msg, idx) {
   });
   stripRow.appendChild(card);
   updateStripState();
-  setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'end' }), 100);
+  if (scrollLatest) setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'end' }), 100);
 }
-updateHint();
 
 /* ── Burst particles ── */
 const BN = 90;
@@ -1248,14 +1475,27 @@ PALETTE.forEach(hex => {
   colorRow.appendChild(sw);
 });
 
-/* Reset link (only show if there are saved messages) */
+/* Reset / refresh link */
 const resetArea = document.getElementById('resetArea');
-if (messages.length > 0) {
+function refreshResetButton() {
+  resetArea.innerHTML = '';
+  if (messages.length === 0) return;
+
   const btn = document.createElement('button');
   btn.className = 'reset-link';
-  btn.textContent = `Clear all ${messages.length} saved note${messages.length>1?'s':''} and reset`;
+  btn.type = 'button';
+  btn.textContent = isDbConfigured()
+    ? 'Refresh shared notes'
+    : `Clear all ${messages.length} saved note${messages.length>1?'s':''} and reset`;
   btn.addEventListener('click', () => {
-    if (confirm('Remove all saved notes? This cannot be undone.')) { clearSaved(); location.reload(); }
+    if (isDbConfigured()) {
+      loadSavedNotes();
+      return;
+    }
+    if (confirm('Remove all saved notes from this device? This cannot be undone.')) {
+      clearLocalSaved();
+      renderMessages([]);
+    }
   });
   resetArea.appendChild(btn);
 }
@@ -1283,10 +1523,11 @@ function updatePreview() {
 });
 
 /* Form submit */
-document.getElementById('noteForm').addEventListener('submit', e => {
+document.getElementById('noteForm').addEventListener('submit', async e => {
   e.preventDefault();
   const nameEl = document.getElementById('n-name');
   const msgEl  = document.getElementById('n-msg');
+  const sendBtn = document.getElementById('send-btn');
   const name   = nameEl.value.trim();
   const role   = document.getElementById('n-role').value.trim();
   const msg    = msgEl.value.trim();
@@ -1309,24 +1550,12 @@ document.getElementById('noteForm').addEventListener('submit', e => {
     card: autoCard(selColor)
   };
 
-  // Save to storage
-  pushSaved(entry);
-  messages.push(entry);
-
-  // Add orb to the 3D scene immediately (no reload needed)
-  buildOrb(entry, orbs.length);
-  addToStrip(entry, messages.length - 1);
-  updateHint();
-  refreshViewBtn();
-  if (resetArea.children.length === 0) {
-    const rb = document.createElement('button');
-    rb.className = 'reset-link';
-    rb.textContent = `Clear all ${messages.length} saved note${messages.length>1?'s':''}`;
-    rb.addEventListener('click', () => { if(confirm('Remove all saved notes?')) { clearSaved(); location.reload(); } });
-    resetArea.appendChild(rb);
-  } else {
-    resetArea.querySelector('.reset-link').textContent = `Clear all ${messages.length} saved note${messages.length>1?'s':''}`;
-  }
+  sendBtn.disabled = true;
+  sendBtn.textContent = isDbConfigured() ? 'Saving to Dad\'s sky...' : 'Saving note...';
+  const savedEntry = await saveNote(entry);
+  appendMessage(savedEntry);
+  sendBtn.disabled = false;
+  sendBtn.textContent = 'Place Your Star ✦';
 
   // Show success, then reset form
   document.getElementById('lb-form').style.display = 'none';
@@ -1413,6 +1642,12 @@ document.getElementById('mpClose').addEventListener('click', () => {
 msgPanel.addEventListener('click', e => {
   if (e.target === msgPanel) msgPanel.classList.remove('open');
 });
+
+refreshNotesBtn.addEventListener('click', () => loadSavedNotes());
+loadSavedNotes();
+if (isDbConfigured()) {
+  setInterval(() => loadSavedNotes({ silent: true }), 20000);
+}
 </script>
 </body>
 </html>
