@@ -9,3 +9,5 @@ This site is static, so GitHub Pages can host the page but cannot store notes by
 5. Commit and push `database-config.js`.
 
 Use only the public anon key. Never put a Supabase `service_role` key in a browser file.
+
+After the database is connected, open the site once on any phone/browser that already has old local notes. The page will keep those notes visible and try to upload them into Supabase so other devices can see them too.

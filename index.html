@@ -1004,6 +1004,17 @@ function normalizeNote(note) {
   };
 }
 
+function noteKey(note) {
+  const n = normalizeNote(note);
+  return [
+    n.name.toLowerCase(),
+    n.role.toLowerCase(),
+    n.emoji,
+    n.message.toLowerCase(),
+    n.color.toLowerCase()
+  ].join('\u0001');
+}
+
 function dbHeaders(extra = {}) {
   return {
     apikey: DB.supabaseAnonKey,
@@ -1020,7 +1031,8 @@ function dbRow(note) {
     emoji: n.emoji,
     message: n.message,
     color: n.color,
-    card: n.card
+    card: n.card,
+    created_at: n.created_at
   };
 }
 
@@ -1050,7 +1062,7 @@ async function saveNote(note) {
   const normalized = normalizeNote(note);
   if (!isDbConfigured()) {
     pushLocalSaved(normalized);
-    setSyncStatus('Saved on this device', 'warn');
+    setSyncStatus('Database not connected yet', 'warn');
     return normalized;
   }
 
@@ -1066,19 +1078,52 @@ async function saveNote(note) {
   }
 }
 
+async function mergeLocalNotesIntoShared(sharedNotes) {
+  const localNotes = getLocalSaved().filter(n => n.message);
+  const sharedKeys = new Set(sharedNotes.map(noteKey));
+  const localOnly = localNotes.filter(n => !sharedKeys.has(noteKey(n)));
+  const uploaded = [];
+  let failed = 0;
+
+  for (const note of localOnly) {
+    try {
+      const saved = await insertSharedNote(note);
+      uploaded.push(saved);
+      sharedKeys.add(noteKey(saved));
+    } catch (err) {
+      failed += 1;
+      console.warn(err);
+    }
+  }
+
+  return {
+    notes: [...sharedNotes, ...uploaded]
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at)),
+    uploaded: uploaded.length,
+    failed
+  };
+}
+
 async function loadSavedNotes({ silent = false } = {}) {
   if (!isDbConfigured()) {
     renderMessages(getLocalSaved());
-    setSyncStatus('Saved on this device', 'warn');
+    setSyncStatus('Database not connected yet', 'warn');
     return;
   }
 
   if (!silent) setSyncStatus('Loading shared notes...', '');
   try {
     const sharedNotes = await fetchSharedNotes();
-    setLocalSaved(sharedNotes);
-    renderMessages(sharedNotes);
-    setSyncStatus('Shared across devices', 'live');
+    const merged = await mergeLocalNotesIntoShared(sharedNotes);
+    setLocalSaved(merged.notes);
+    renderMessages(merged.notes);
+    if (merged.failed) {
+      setSyncStatus('Shared loaded; some local notes stayed here', 'warn');
+    } else if (merged.uploaded) {
+      setSyncStatus('Shared across devices; old notes synced', 'live');
+    } else {
+      setSyncStatus('Shared across devices', 'live');
+    }
   } catch (err) {
     console.warn(err);
     renderMessages(getLocalSaved());
@@ -1249,6 +1294,7 @@ function renderMessages(nextMessages, { scrollLatest = false } = {}) {
     buildOrb(m, i);
     addToStrip(m, i, false);
   });
+  setLocalSaved(messages);
   updateHint();
   refreshViewBtn();
   refreshResetButton();
@@ -1265,6 +1311,7 @@ function appendMessage(note, { scrollLatest = true } = {}) {
   messages.push(normalized);
   buildOrb(normalized, idx);
   addToStrip(normalized, idx, scrollLatest);
+  setLocalSaved(messages);
   updateHint();
   refreshViewBtn();
   refreshResetButton();
@@ -1606,7 +1653,9 @@ function populatePanel() {
 
   if (messages.length === 0) {
     sub.textContent = '';
-    scroll.innerHTML = '<div class="mp-empty">No notes yet — be the first to leave one 💌</div>';
+    scroll.innerHTML = isDbConfigured()
+      ? '<div class="mp-empty">No shared notes yet — refresh after someone leaves one 💌</div>'
+      : '<div class="mp-empty">Database not connected yet — this device can only show notes saved here 💌</div>';
     return;
   }
 
