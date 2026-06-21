@@ -1016,11 +1016,14 @@ function noteKey(note) {
 }
 
 function dbHeaders(extra = {}) {
-  return {
+  const headers = {
     apikey: DB.supabaseAnonKey,
-    Authorization: `Bearer ${DB.supabaseAnonKey}`,
     ...extra
   };
+  if (!DB.supabaseAnonKey.startsWith('sb_publishable_')) {
+    headers.Authorization = `Bearer ${DB.supabaseAnonKey}`;
+  }
+  return headers;
 }
 
 function dbRow(note) {

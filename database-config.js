@@ -1,7 +1,6 @@
 window.DAD_NOTES_DB = {
-  // Fill these after creating the Supabase project and table.
-  // Use the public anon key only. Never put a service_role key in this file.
-  supabaseUrl: '',
-  supabaseAnonKey: '',
+  // Public browser key only. Never put a service_role or sb_secret key here.
+  supabaseUrl: 'https://qaztsznppoqxyxdbroof.supabase.co',
+  supabaseAnonKey: 'sb_publishable_IaiooiJ9lhIfvx3Nyo4GsQ_PFRDnzVo',
   table: 'fathers_day_notes'
 };
