@@ -794,6 +794,286 @@ textarea.f-input {
     max-height: 118px;
   }
 }
+
+@media (max-width: 700px) and (orientation: portrait) {
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: max(10px, env(safe-area-inset-top)) 0 calc(18px + env(safe-area-inset-bottom));
+  }
+
+  canvas {
+    position: fixed;
+    inset: 0;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    z-index: 0;
+  }
+
+  #title {
+    position: relative;
+    padding: 0 84px 10px 0;
+    text-align: left;
+    z-index: 2;
+  }
+
+  #title h1 {
+    font-size: 1.26rem;
+    letter-spacing: 2px;
+    line-height: 1.15;
+  }
+
+  #title p {
+    margin-top: 3px;
+    font-size: 0.58rem;
+    letter-spacing: 2.4px;
+    line-height: 1.35;
+  }
+
+  #letterbox,
+  body.has-notes #letterbox {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: min(calc(100vw - 80px), 360px);
+    max-width: none;
+    max-height: none;
+    overflow: visible;
+    margin: 0 auto 12px 18px;
+    transform: none;
+    animation: none;
+    border-radius: 16px;
+    z-index: 2;
+  }
+
+  .lb-flap {
+    padding: 12px 18px 28px;
+  }
+
+  .lb-flap-icon {
+    font-size: 1.55rem;
+    margin-bottom: 2px;
+  }
+
+  .lb-flap-title {
+    font-size: 1.05rem;
+  }
+
+  .lb-flap-sub {
+    font-size: 0.58rem;
+    letter-spacing: 1.6px;
+  }
+
+  .lb-body {
+    padding: 14px 14px 16px;
+    border-radius: 0 0 16px 16px;
+  }
+
+  #lb-success {
+    padding: 32px 18px 36px;
+    border-radius: 0 0 16px 16px;
+  }
+
+  .f-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .f-group {
+    margin-bottom: 9px;
+  }
+
+  .f-label {
+    font-size: 0.58rem;
+    letter-spacing: 1.6px;
+    margin-bottom: 4px;
+  }
+
+  .f-input {
+    min-height: 36px;
+    padding: 7px 9px;
+    font-size: 0.9rem;
+    border-radius: 7px;
+  }
+
+  textarea.f-input {
+    height: 70px;
+    line-height: 22px;
+    padding-top: 5px;
+    background-image: repeating-linear-gradient(
+      transparent, transparent 21px,
+      rgba(218,165,32,0.18) 21px, rgba(218,165,32,0.18) 22px
+    );
+  }
+
+  .emoji-grid {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: 3px;
+  }
+
+  .e-btn {
+    min-width: 0;
+    min-height: 30px;
+    padding: 4px 1px;
+    font-size: 0.98rem;
+    border-radius: 6px;
+  }
+
+  .color-row {
+    gap: 7px;
+  }
+
+  .c-swatch {
+    width: 25px;
+    height: 25px;
+  }
+
+  .lb-divider {
+    margin: 9px 0;
+  }
+
+  #previewWrap {
+    padding-top: 9px;
+    margin-bottom: 10px;
+  }
+
+  .prev-label {
+    font-size: 0.55rem;
+    letter-spacing: 1.8px;
+    margin-bottom: 7px;
+  }
+
+  .prev-card {
+    padding: 12px 12px 11px;
+    border-radius: 11px;
+  }
+
+  .prev-emoji {
+    font-size: 1.25rem;
+    margin-bottom: 4px;
+  }
+
+  .prev-name {
+    font-size: 0.94rem;
+  }
+
+  .prev-role {
+    font-size: 0.55rem;
+    letter-spacing: 1.8px;
+    margin-bottom: 6px;
+  }
+
+  .prev-line {
+    margin-bottom: 7px;
+  }
+
+  .prev-msg {
+    font-size: 0.8rem;
+    line-height: 1.42;
+  }
+
+  #send-btn {
+    padding: 10px;
+    font-size: 0.9rem;
+    letter-spacing: 1.4px;
+    border-radius: 9px;
+  }
+
+  .reset-area {
+    margin-top: 7px;
+  }
+
+  .reset-link {
+    font-size: 0.58rem;
+    letter-spacing: 1.2px;
+  }
+
+  #notesStrip {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    width: min(calc(100vw - 80px), 360px);
+    max-width: none;
+    max-height: none;
+    margin: 0 auto 10px 18px;
+    padding: 14px 12px;
+    border: 1px solid rgba(218,165,32,0.16);
+    border-radius: 16px;
+    background: rgba(2,4,16,0.76);
+    backdrop-filter: blur(12px);
+    z-index: 2;
+  }
+
+  .strip-head {
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .strip-label {
+    font-size: 0.58rem;
+    letter-spacing: 2px;
+  }
+
+  .sync-status {
+    font-size: 0.62rem;
+    line-height: 1.2;
+  }
+
+  #stripRow {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    max-height: 238px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 1px 2px 3px;
+  }
+
+  .s-card {
+    min-height: 72px;
+    padding: 9px 10px;
+    border-radius: 11px;
+  }
+
+  .s-name {
+    font-size: 0.78rem;
+  }
+
+  .s-preview {
+    font-size: 0.7rem;
+    line-height: 1.34;
+  }
+
+  #viewBtn {
+    position: relative;
+    top: auto;
+    right: auto;
+    display: none;
+    width: fit-content;
+    max-width: 100%;
+    margin: 0 auto;
+    z-index: 2;
+    padding: 9px 14px;
+    font-size: 0.68rem;
+  }
+}
+
+@media (max-width: 380px) and (orientation: portrait) {
+  #title {
+    padding-right: 0;
+    text-align: center;
+  }
+
+  #stripRow {
+    grid-template-columns: 1fr;
+    max-height: 230px;
+  }
+}
 </style>
 </head>
 <body>
