@@ -54,6 +54,29 @@ canvas { display: block; }
   font-style: italic;
 }
 
+.family-photo {
+  position: fixed;
+  left: 28px;
+  top: 17vh;
+  width: min(22vw, 340px);
+  z-index: 12;
+  border-radius: 18px;
+  padding: 8px;
+  background: linear-gradient(145deg, rgba(255,240,180,0.22), rgba(255,255,255,0.05));
+  border: 1px solid rgba(255,215,0,0.22);
+  box-shadow: 0 24px 70px rgba(0,0,0,0.5), 0 0 50px rgba(255,190,80,0.08);
+  transform: rotate(-1.5deg);
+  backdrop-filter: blur(10px);
+}
+.family-photo img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  object-position: center 55%;
+  border-radius: 12px;
+}
+
 /* ── Star count hint ── */
 #star-hint {
   position: fixed;
@@ -833,6 +856,24 @@ textarea.f-input {
     line-height: 1.35;
   }
 
+  .family-photo {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: min(calc(100vw - 80px), 360px);
+    max-width: none;
+    margin: 0 auto 12px 18px;
+    padding: 6px;
+    border-radius: 14px;
+    transform: none;
+    z-index: 2;
+  }
+
+  .family-photo img {
+    aspect-ratio: 16 / 9;
+    border-radius: 10px;
+  }
+
   #letterbox,
   body.has-notes #letterbox {
     position: relative;
@@ -1069,6 +1110,12 @@ textarea.f-input {
     text-align: center;
   }
 
+  .family-photo {
+    margin-left: auto;
+    margin-right: auto;
+    width: min(86vw, 340px);
+  }
+
   #stripRow {
     grid-template-columns: 1fr;
     max-height: 230px;
@@ -1084,6 +1131,10 @@ textarea.f-input {
   <h1>Happy Father's Day</h1>
   <p>With love, from all of us</p>
 </div>
+
+<figure class="family-photo" aria-label="Family photo">
+  <img src="1.jpg" alt="Family together in matching light shirts">
+</figure>
 
 <!-- ═══════════════════════════════
      CENTRAL LETTERBOX
