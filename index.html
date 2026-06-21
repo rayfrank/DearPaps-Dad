@@ -115,6 +115,11 @@ canvas { display: block; }
 }
 #letterbox::-webkit-scrollbar { display: none; }
 
+body.has-notes #letterbox {
+  max-height: calc(100vh - 230px);
+  max-height: calc(100dvh - 230px);
+}
+
 @keyframes boxFloat {
   0%, 100% { transform: translateX(-50%) rotate(-0.3deg); }
   50%       { transform: translateX(-50%) translateY(-7px) rotate(0.3deg); }
@@ -580,12 +585,14 @@ textarea.f-input {
 #notesStrip {
   position: fixed;
   bottom: 0; left: 0; right: 0;
-  padding: 40px 18px 14px;
-  background: linear-gradient(to top, rgba(2,4,16,0.97) 55%, transparent);
-  z-index: 45;
+  max-height: 34vh;
+  padding: 42px 18px calc(14px + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, rgba(2,4,16,0.98) 72%, rgba(2,4,16,0));
+  z-index: 55;
   display: none;
+  pointer-events: none;
 }
-#notesStrip.visible { display: block; }
+#notesStrip.visible { display: block; pointer-events: auto; }
 
 .strip-label {
   font-size: 0.6rem;
@@ -610,39 +617,134 @@ textarea.f-input {
 
 .s-card {
   flex-shrink: 0;
-  width: 170px;
+  width: 190px;
+  min-height: 86px;
   border-radius: 14px;
-  padding: 12px 13px 10px;
+  padding: 12px 13px 11px;
   cursor: pointer;
   color: #fff;
   box-shadow: 0 4px 18px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   animation: sCardIn 0.45s cubic-bezier(0.34,1.56,0.64,1) both;
 }
+.s-card:focus-visible {
+  outline: 2px solid rgba(255,255,255,0.8);
+  outline-offset: 3px;
+}
 .s-card:hover { transform: translateY(-6px); box-shadow: 0 12px 30px rgba(0,0,0,0.6); }
 @keyframes sCardIn {
   from { opacity: 0; transform: scale(0.7) translateY(12px); }
   to   { opacity: 1; transform: scale(1) translateY(0); }
 }
-.s-emoji { font-size: 1.1rem; display: inline-block; margin-right: 4px; vertical-align: middle; }
+.s-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.s-emoji { font-size: 1.1rem; flex: 0 0 auto; }
 .s-name  {
-  display: inline-block;
   font-family: 'Playfair Display', serif;
   font-size: 0.82rem;
   font-weight: 700;
-  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .s-preview {
-  font-size: 0.7rem;
+  font-size: 0.74rem;
   font-style: italic;
-  opacity: 0.68;
-  margin-top: 5px;
+  opacity: 0.78;
+  margin-top: 6px;
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
   -webkit-box-orient: vertical;
-  line-height: 1.4;
+  line-height: 1.45;
+}
+
+@media (max-width: 700px) {
+  #title {
+    padding-top: max(12px, env(safe-area-inset-top));
+  }
+  #title h1 {
+    font-size: 1.35rem;
+    letter-spacing: 3px;
+  }
+  #title p {
+    font-size: 0.62rem;
+    letter-spacing: 4px;
+  }
+  #viewBtn {
+    top: max(10px, env(safe-area-inset-top));
+    right: 10px;
+    max-width: 46vw;
+    padding: 9px 12px;
+    font-size: 0.66rem;
+    letter-spacing: 1.4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  body.has-notes #letterbox {
+    top: max(74px, 11vh);
+    top: max(74px, 11dvh);
+    width: min(92vw, 390px);
+    max-height: calc(100vh - 270px - env(safe-area-inset-bottom));
+    max-height: calc(100dvh - 270px - env(safe-area-inset-bottom));
+  }
+  #notesStrip {
+    max-height: min(36vh, 230px);
+    max-height: min(36dvh, 230px);
+    padding: 34px 12px calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid rgba(218,165,32,0.14);
+    background: linear-gradient(to top, rgba(2,4,16,0.99) 84%, rgba(2,4,16,0));
+  }
+  .strip-label {
+    margin-bottom: 7px;
+    padding-left: 2px;
+    letter-spacing: 3px;
+  }
+  #stripRow {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: min(24vh, 150px);
+    max-height: min(24dvh, 150px);
+    padding: 0 2px 4px;
+  }
+  .s-card {
+    width: auto;
+    min-width: 0;
+    min-height: 76px;
+    border-radius: 12px;
+    padding: 10px 11px;
+  }
+  .s-card:hover {
+    transform: none;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06);
+  }
+  .s-preview {
+    font-size: 0.72rem;
+    line-height: 1.38;
+  }
+}
+
+@media (max-height: 650px) and (max-width: 700px) {
+  body.has-notes #letterbox {
+    top: 58px;
+    max-height: calc(100vh - 230px - env(safe-area-inset-bottom));
+    max-height: calc(100dvh - 230px - env(safe-area-inset-bottom));
+  }
+  #notesStrip {
+    max-height: 32vh;
+    max-height: 32dvh;
+  }
+  #stripRow {
+    max-height: 118px;
+  }
 }
 </style>
 </head>
@@ -743,7 +845,7 @@ textarea.f-input {
 
 <!-- Notes strip — shown as notes are written -->
 <div id="notesStrip">
-  <div class="strip-label">Notes for Dad</div>
+  <div class="strip-label" id="stripLabel">Notes for Dad</div>
   <div id="stripRow"></div>
 </div>
 
@@ -873,6 +975,9 @@ function glowTex(hex) {
 const orbs    = [];
 const spheres = [];
 const messages = getSaved();
+const notesStrip = document.getElementById('notesStrip');
+const stripRow = document.getElementById('stripRow');
+const stripLabel = document.getElementById('stripLabel');
 
 function orbPos(idx) {
   // Golden angle spiral — each orb naturally avoids the others
@@ -929,21 +1034,34 @@ function buildOrb(msg, idx) {
 messages.forEach((m, i) => { buildOrb(m, i); addToStrip(m, i); });
 
 // Update star hint
-function updateHint() { /* replaced by the notes strip */ }
+function updateHint() { updateStripState(); }
+
+function updateStripState() {
+  const n = messages.length;
+  document.body.classList.toggle('has-notes', n > 0);
+  notesStrip.classList.toggle('visible', n > 0);
+  stripLabel.textContent = n === 1 ? '1 Note for Dad' : `${n} Notes for Dad`;
+}
 
 function addToStrip(msg, idx) {
-  const row = document.getElementById('stripRow');
   const card = document.createElement('div');
   card.className = 's-card';
+  card.tabIndex = 0;
+  card.setAttribute('role', 'button');
+  card.setAttribute('aria-label', `Open note from ${msg.name}`);
   card.style.background = msg.card;
   card.style.animationDelay = `${Math.min(idx, 8) * 0.07}s`;
+  const preview = msg.message.length > 92 ? msg.message.slice(0, 92) + '…' : msg.message;
   card.innerHTML = `
-    <span class="s-emoji">${escHtml(msg.emoji)}</span><span class="s-name">From ${escHtml(msg.name)}</span>
-    <div class="s-preview">${escHtml(msg.message)}</div>
+    <div class="s-top"><span class="s-emoji">${escHtml(msg.emoji)}</span><span class="s-name">From ${escHtml(msg.name)}</span></div>
+    <div class="s-preview">“${escHtml(preview)}”</div>
   `;
   card.addEventListener('click', () => openCard(idx));
-  row.appendChild(card);
-  document.getElementById('notesStrip').classList.add('visible');
+  card.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openCard(idx); }
+  });
+  stripRow.appendChild(card);
+  updateStripState();
   setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'end' }), 100);
 }
 updateHint();
@@ -984,15 +1102,23 @@ function setMouse(x,y) {
   tooltip.style.left = x+'px';
   tooltip.style.top  = y+'px';
 }
-function handleClick(x,y) {
-  setMouse(x,y);
+function isUiTarget(target) {
+  return target.closest && target.closest('#letterbox, #notesStrip, #viewBtn, #msgPanel, #overlay');
+}
+function handleClick(e) {
+  if (isUiTarget(e.target)) return;
+  setMouse(e.clientX,e.clientY);
   ray.setFromCamera(mouse,camera);
   const hits = ray.intersectObjects(spheres);
   if (hits.length) { const i=spheres.indexOf(hits[0].object); if(i>=0) openCard(i); }
 }
 window.addEventListener('mousemove', e => setMouse(e.clientX,e.clientY));
-window.addEventListener('click',     e => handleClick(e.clientX,e.clientY));
-window.addEventListener('touchend',  e => { const t=e.changedTouches[0]; handleClick(t.clientX,t.clientY); },{passive:true});
+window.addEventListener('click',     handleClick);
+window.addEventListener('touchend',  e => {
+  if (isUiTarget(e.target)) return;
+  const t=e.changedTouches[0];
+  handleClick({ target: e.target, clientX: t.clientX, clientY: t.clientY });
+},{passive:true});
 
 /* ── Read card ── */
 const overlay = document.getElementById('overlay');
@@ -1217,6 +1343,7 @@ document.getElementById('noteForm').addEventListener('submit', e => {
       b.classList.toggle('sel', b.textContent === '✨');
     });
     selEmoji = '✨';
+    updatePreview();
   }, 2200);
 });
 
